@@ -68,10 +68,6 @@ app.get('/about', (req, res) => {
     res.render('about');
 });
 
-app.get('/users', (req, res) => {
-    res.render('/users/login');
-});
-
 
 
 //Use Idea Routes
