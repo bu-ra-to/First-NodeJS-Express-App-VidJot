@@ -4,6 +4,7 @@ const exphbs = require('express-handlebars');
 const methodOverride = require('method-override');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const passport = require('passport');
 const flash = require('connect-flash');
 const bodyParser = require('body-parser');
 const ideas = require('./routes/ideas');
@@ -53,6 +54,9 @@ app.use((req, res, next) => {
 
     next();
 });
+
+//Passport
+require('./config/passport')(passport);
 
 //Index Rout
 app.get('/', (req, res) => {
