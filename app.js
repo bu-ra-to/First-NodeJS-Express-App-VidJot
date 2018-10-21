@@ -2,14 +2,21 @@ const express = require('express');
 const app = express();
 const exphbs = require('express-handlebars');
 const methodOverride = require('method-override');
-const mongoose = require('mongoose');
-const session = require('express-session');
-const passport = require('passport');
 const flash = require('connect-flash');
+const session = require('express-session');
 const bodyParser = require('body-parser');
+const passport = require('passport');
+const mongoose = require('mongoose');
+
+// Load Routes
 const ideas = require('./routes/ideas');
 const users = require('./routes/users');
 
+//Passport config
+require('./config/passport')(passport);
+
+// Map global promise - get rid of warning
+mongoose.Promise = global.Promise;
 
 //Connect to Mongoose
 mongoose.connect('mongodb://localhost/vidjot-dev', {
@@ -36,7 +43,7 @@ app.use(methodOverride('_method'));
 
 //Session middleware
 app.use(session({
-    secret: 'cat',
+    secret: 'secret',
     resave: true,
     saveUninitialized: true,
 }));
@@ -52,11 +59,11 @@ app.use((req, res, next) => {
 
     res.locals.error = req.flash('error');
 
+    res.locals.user = req.user || null;
+
     next();
 });
 
-//Passport
-require('./config/passport')(passport);
 
 //Index Rout
 app.get('/', (req, res) => {
