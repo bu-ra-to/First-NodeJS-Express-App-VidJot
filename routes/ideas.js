@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const { ensureAutenticated } = require('../helpers/auth');
 
 
 //Load Ideas Model 
@@ -8,8 +9,8 @@ require('../models/Ideas');
 const Idea = mongoose.model('ideas');
 
 //Ideas Rout
-router.get('/', (req, res) => {
-    Idea.find({})
+router.get('/', ensureAutenticated, (req, res) => {
+    Idea.find({ user: req.user.id })
         .sort({ date: 'desc' })
         .then(ideas => { res.render('ideas/index', { ideas: ideas }); });
 
@@ -17,23 +18,31 @@ router.get('/', (req, res) => {
 });
 
 // Add Idea Form
-router.get('/add', (req, res) => {
+router.get('/add', ensureAutenticated, (req, res) => {
     res.render('ideas/add');
 });
 
 // Edit Idea 
-router.get('/edit/:id', (req, res) => {
+router.get('/edit/:id', ensureAutenticated, (req, res) => {
     Idea.findOne({
         _id: req.params.id
     })
         .then(idea => {
-            res.render('ideas/edit', { idea: idea });
+            if (idea.user != req.user.id) {
+                req.flash('error_msg', 'Not Your Idea');
+
+                res.redirect('/ideas');
+            } else {
+                res.render('ideas/edit', { idea: idea });
+            }
+
+
         });
 
 });
 
 //Precess Form
-router.post('/', (req, res) => {
+router.post('/', ensureAutenticated, (req, res) => {
     let error = [];
     if (!req.body.title) {
         error.push({ text: 'Plese enter some Title' });
@@ -50,7 +59,8 @@ router.post('/', (req, res) => {
     } else {
         const newUser = {
             title: req.body.title,
-            details: req.body.details
+            details: req.body.details,
+            user: req.user.id
         };
 
         new Idea(newUser).save().then(() => {
@@ -61,7 +71,7 @@ router.post('/', (req, res) => {
     }
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', ensureAutenticated, (req, res) => {
     Idea.findOne({
         _id: req.params.id
     }).then(idea => {
@@ -77,14 +87,13 @@ router.put('/:id', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', ensureAutenticated, (req, res) => {
     Idea.deleteOne({ _id: req.params.id })
         .then(() => {
             req.flash('success_msg', 'Idea Deleted');
 
             res.redirect('/ideas');
         });
-    // res.send('Winter');
 });
 
 module.exports = router;

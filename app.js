@@ -15,11 +15,14 @@ const users = require('./routes/users');
 //Passport config
 require('./config/passport')(passport);
 
+// DB config
+const db = require('./config/database');
+
 // Map global promise - get rid of warning
 mongoose.Promise = global.Promise;
 
 //Connect to Mongoose
-mongoose.connect('mongodb://localhost/vidjot-dev', {
+mongoose.connect(db.mongoURI, {
     useNewUrlParser: true
 })
     .then(() => console.log('mongodb connected'))
@@ -47,6 +50,11 @@ app.use(session({
     resave: true,
     saveUninitialized: true,
 }));
+
+// Passport Middleware
+app.use(passport.initialize());
+
+app.use(passport.session());
 
 ///Flash middleware
 app.use(flash());
@@ -87,6 +95,8 @@ app.use('/ideas', ideas);
 //Use Users Routes
 app.use('/users', users);
 
-app.listen(5000, () => {
-    console.log(`server started on port ${5000}`);
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => {
+    console.log(`server started on port ${port}`);
 });
